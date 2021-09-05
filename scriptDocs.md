@@ -16,17 +16,19 @@ The script uses :
 - [PyGithub](https://github.com/PyGithub/PyGithub)
 - [Python-dotenv](https://github.com/theskumar/python-dotenv)
 - [python-frontmatter](https://github.com/eyeseast/python-frontmatter)
+- [Pyperclip](https://github.com/asweigart/pyperclip) on Windows/MacOS/Linux | IOS : Pasteboard (Pyto) or clipboard (Pythonista)
 
 You can install all with `pip install -r requirements.txt`
 
 ## Environment
-You need a `.env` file in root containing the path to your obsidian vault. The file looks like this :
+You need a `.env` file in root containing the path to your obsidian vault and the link to your blog. The file looks like this :
 ```
 vault="G:\path\vault\"
+blog="https://your-website.netlify.app/notes/"
 ```
 
 # Script
-There are several way to use the script :
+There are several ways to use the script :
 - `python3 sharing.py` directly to convert, commit and push all file containing `share: true` in the frontmatter
 - `python3 sharing.py <file>` to convert specific file (without using the frontmatter)
 
@@ -37,19 +39,20 @@ You can use some option :
 
 ## Checking differences 
 
-⚠️ By default, the script will check if the file was edited by **checking the number of line**. If the line is exactly the same, the file will be not converted. New line, blank line and comment **are removed** in this checking. 
+⚠️ By default, the script will check if the file was edited by **checking the number of line**. If the line is exactly the same, the file will be not converted. New line, blank line, line escape (`\`) and comment **are removed** in this checking. 
 
 So, to force update to a single file you can :
 - Use `share <filepath>` directly
 - Use `--f` to force update all file 
 - Continue to work on the file before pushing it.
 - Add a newline with `$~$` or `<br>` (it will be not converted and displayed on page / obsidian so...)
+- Manually delete the file 
 
 ## Options
 ### Share all
 By adding, in the yaml of your file, the key `share: true`, you allow the script to publish the file. In fact, the script will read all the files in your vault before selecting the ones meeting the condition.
 
-By default, the script will check the difference between line [(*cf checking difference*)](https://github.com/Mara-Li/owlly-house#checking-differences), and convert only the file with difference. You can use `--f` to force update. 
+By default, the script will check the difference between line [(*cf checking difference*)](https://github.com/Mara-Li/yes-another-free-publish/tree/owlly-house#checking-differences), and convert only the file with difference. You can use `--f` to force update. 
 
 ### Share only a file
 
@@ -67,8 +70,12 @@ The script :
 - Support normal and external files
 - Frontmatter : In absence of date, add the day's date.
 - Frontmatter : In absence of title, add the file's title.
+- Copy the link to your clipboard if one file is edited.
 
 Finally, the plugin will add, commit and push if supported.
+
+Note : The clipboard maybe not work in your configuration. I have (and can) only test the script on IOS and Windows, so I use `pyperclip` and `pasteboard` to do that. If you are on MacOS, Linux, Android, please, check your configuration on your python and open an issue if it doesn't work. 
+Note : I **can't** testing on these 3 OS, so I can't create a clipboard option on my own. 
 
 ### IOS Shortcuts
 
