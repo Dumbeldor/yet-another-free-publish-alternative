@@ -204,10 +204,11 @@ def convert_internal(line):
 
 
 def transluction_note(line):
-    # If file (not image) start with "![[" : transluction with lsn-transclude (exclude image from that)
+    # If file (not image) start with "![[" : transluction with rmn-transclude (exclude
+    # image from that)
     # Note : Doesn't support partial transluction for the moment ; remove title
     final_text = line
-    if re.match("\!\[{2}", line) and not re.match("(png|jpg|jpeg|gif)", line):
+    if re.match("\!\[{2}", line) and not re.match("(.*)\.(png|jpg|jpeg|gif)", line):
         final_text = line.replace("!", "")  # remove "!"
         final_text = re.sub("#(.*)]]", "]]", final_text)
         final_text = re.sub("]]", "::rmn-transclude]]", final_text)
@@ -227,17 +228,15 @@ def frontmatter_check(filename):
     update = frontmatter.dumps(meta)
     metadata.close()
     final = open(Path(f"{BASEDIR}/_notes/{filename}"), "w", encoding="utf-8")
-    if not "date" in meta:
+    if not "date" in meta.keys():
         now = datetime.now().strftime("%d-%m-%Y")
-        metadata = frontmatter.Post(meta.content, update, date=now)
-        update = frontmatter.dumps(metadata)
+        meta['date'] = now
+        update = frontmatter.dumps(meta)
         meta = frontmatter.loads(update)
-    if not "title" in meta:
-        metadata = frontmatter.Post(
-            meta.content, frontmatter.dumps(meta), title=filename
-        )
-        update = frontmatter.dumps(metadata)
-    final.write(frontmatter.dumps(update))
+    if not "title" in meta.keys():
+        meta['title'] = filename.replace('.md', '')
+        update = frontmatter.dumps(meta)
+    final.write(update)
     return
 
 def clipboard(filepath):
