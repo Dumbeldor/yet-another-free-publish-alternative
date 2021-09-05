@@ -9,7 +9,7 @@ import shutil
 from datetime import datetime
 import frontmatter
 import yaml
-#Git error fixing
+
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 env = dotenv_values(Path(f"{BASEDIR}/.env"))
 path = Path(f"{BASEDIR}/.git")  # GIT SHARED
@@ -17,6 +17,7 @@ vault = Path(env["vault"])
 print(vault)
 site = env["site"]
 post = Path(f"{BASEDIR}/_notes")
+blog = env["blog"]
 img = Path(f"{BASEDIR}/assets/img/")
 
 
@@ -72,10 +73,11 @@ def retro(file):
     # Remove newline and comment
 
     notes = []
+    metadata = frontmatter.load(filepath)
+    file = metadata.content.split("\n")
     for n in file:
-        if n != "  \n" or n != "  " or n != "\n":
-            n = n.replace("  \n", "")
-            n = n.replace("\n", "")
+        if n != "\\":
+            n = n.strip()
             notes.append(n)
     notes = [i for i in notes if i != ""]
     notes = [i for i in notes if "%%" not in i]
@@ -230,38 +232,44 @@ def frontmatter_check(filename):
     final = open(Path(f"{BASEDIR}/_notes/{filename}"), "w", encoding="utf-8")
     if not "date" in meta.keys():
         now = datetime.now().strftime("%d-%m-%Y")
-        meta['date'] = now
+        meta["date"] = now
         update = frontmatter.dumps(meta)
         meta = frontmatter.loads(update)
     if not "title" in meta.keys():
-        meta['title'] = filename.replace('.md', '')
+        meta["title"] = filename.replace(".md", "")
         update = frontmatter.dumps(meta)
     final.write(update)
     return
 
+
 def clipboard(filepath):
-    filename=os.path.basename(filepath)
-    filename=filename.replace('.md', '')
-    if sys.platform == 'ios' or sys.platform == 'darwin':
+    filename = os.path.basename(filepath)
+    filename = filename.replace(".md", "")
+    if sys.platform == "ios":
         try:
-            # Trying to use pasteboard packages
-            import pasteboard
-            pasteboard.set_url(f'{blog}notes/{filename}')
+            import pasteboard  # work with pyto
+
+            pasteboard.set_url(f"{blog}{filename}")
         except ImportError:
-            print('Please, report issue with your OS and configuration to check if it possible to use another clipboard manager')
-    elif sys.platform == 'win32':
+            try:
+                import clipboard  # work with pytonista
+
+                clipboard.set(f"{blog}{filename}")
+            except ImportError:
+                print(
+                    "Please, report issue with your OS and configuration to check if it possible to use another clipboard manager"
+                )
+    else:
         try:
-            #trying to use Pyperclip on windows
+            # trying to use Pyperclip
             import pyperclip
-            pyperclip.copy(f'{blog}notes/{filename}')
+
+            pyperclip.copy(f"{blog}{filename}")
         except ImportError:
             print(
-                'Please, report issue with your OS and configuration to check if it possible to use another clipboard manager')
-    else:
-        print(
-            'Please, report issue with your OS and configuration to check if it '
-            'possible to use another clipboard manager')
-        
+                "Please, report issue with your OS and configuration to check if it possible to use another clipboard manager"
+            )
+
 
 def file_convert(file):
     file_name = os.path.basename(file)
@@ -275,6 +283,8 @@ def file_convert(file):
             if meta["share"] is False:
                 return
             data.close()
+            if not meta["share"] or meta["share"] is False:
+                return
             for ln in lines:
                 final_text = ln.replace("\n", "  \n")
                 final_text = transluction_note(final_text)
@@ -301,6 +311,9 @@ def file_convert(file):
             frontmatter_check(file_name)
             return True
         else:
+            meta = frontmatter.load(file)
+            if not meta["share"] or meta["share"] == False:
+                delete_file(file)
             return False
     else:
         return False
@@ -315,18 +328,22 @@ def search_share(option=0):
     for sub, dirs, files in os.walk(vault):
         for file in files:
             filepath = sub + os.sep + file
-            if filepath.endswith(".md"):
-                yaml = frontmatter.load(filepath)
-                if yaml["share"] is True:
-                    if option == 1:
-                        if diff_file(filepath):
+            if filepath.endswith(".md") and "excalidraw" not in filepath:
+                try:
+                    yaml_front = frontmatter.load(filepath)
+                    if "share" in yaml_front and yaml_front["share"] is True:
+                        if option == 1:
+                            if diff_file(filepath):
+                                delete_file(filepath)
+                        if option == 2:
                             delete_file(filepath)
-                    if option == 2:
-                        delete_file(filepath)
-                    check = file_convert(filepath)
-                    destination = dest(filepath)
-                    if check:
-                        filespush.append(destination)
+                        check = file_convert(filepath)
+                        destination = dest(filepath)
+                        if check:
+                            filespush.append(destination)
+                except yaml.scanner.ScannerError:
+                    pass
+
     return filespush
 
 
@@ -417,6 +434,9 @@ def convert_to_github():
                 commit = "Add to blog:\n"
                 if len(new_files) > 0:
                     if ng != "--G":
+                        if len(new_files) == 1:
+                            md = "".join(new_files)
+                            clipboard(md)
                         try:
                             import git
 
@@ -450,12 +470,18 @@ def convert_to_github():
         new_files = search_share(1)
         commit = "Add to blog :\n"
         if len(new_files) > 0:
+            if len(new_files) == 1:
+                md = "".join(new_files)
+                clipboard(md)
             try:
                 import git
 
                 repo = git.Repo(Path(f"{BASEDIR}/.git"))
                 for md in new_files:
                     commit = commit + "\n — " + md
+                if len(new_files) == 1:
+                    md = "".join(new_files)
+                    clipboard(md)
                 repo.git.add(A=True)
                 repo.git.commit(m=commit)
                 origin = repo.remote("origin")
