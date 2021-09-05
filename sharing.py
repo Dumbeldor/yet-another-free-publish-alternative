@@ -8,8 +8,8 @@ from pathlib import Path
 import shutil
 from datetime import datetime
 import frontmatter
-
-
+import yaml
+#Git error fixing
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 env = dotenv_values(Path(f"{BASEDIR}/.env"))
 path = Path(f"{BASEDIR}/.git")  # GIT SHARED
