@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import re
 import sys
 import os
@@ -8,15 +6,14 @@ from pathlib import Path
 import shutil
 from datetime import datetime
 import frontmatter
-
+import yaml
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 env = dotenv_values(Path(f"{BASEDIR}/.env"))
 path = Path(f"{BASEDIR}/.git")  # GIT SHARED
 vault = Path(env["vault"])
-print(vault)
-site = env["site"]
 post = Path(f"{BASEDIR}/_notes")
+blog = env["blog"]
 img = Path(f"{BASEDIR}/assets/img/")
 
 
@@ -66,34 +63,29 @@ def get_tab_token(final_text):
     return token_end, table_end, table_start, token_start
 
 
-def retro(file):
-    # Yes, It's stupid, but it's work.
+def retro(filepath):
+    # Yes, It's stupid, but it works.
     # It permit to compare the file in file diff with len(file)
-    # Remove newline and comment
-
+    # Remove newline, comment and frontmatter
     notes = []
+    metadata = frontmatter.load(filepath)
+    file = metadata.content.split("\n")
     for n in file:
-        if n != "  \n" or n != "  " or n != "\n":
-            n = n.replace("  \n", "")
-            n = n.replace("\n", "")
+        if n != "\\":
+            n = n.strip()
             notes.append(n)
     notes = [i for i in notes if i != ""]
     notes = [i for i in notes if "%%" not in i]
-    notes = [i for i in notes if "date:" not in i]
     return notes
 
 
 def diff_file(file):
     file_name = os.path.basename(file)
     if check_file(file_name) == "EXIST":
-        vault = open(file, "r", encoding="utf-8")
-        notes = open(Path(f"{BASEDIR}/_notes/{file_name}"), "r", encoding="utf-8")
-        vault_data = vault.readlines()
-        notes_data = notes.readlines()
-        vault.close()
-        notes.close()
-        vault = retro(vault_data)
-        notes = retro(notes_data)
+        vault = file
+        notes = Path(f"{BASEDIR}/_notes/{file_name}")
+        vault = retro(vault)
+        notes = retro(notes)
         if len(vault) == len(notes):
             return False
         else:
@@ -102,16 +94,16 @@ def diff_file(file):
 
 def delete_file(filepath):
     for file in os.listdir(post):
-        print(file)
         filepath = os.path.basename(filepath)
         filecheck = os.path.basename(file)
         if filecheck == filepath:
-            os.remove(Path(f"{BASEDIR}\_notes\{file}"))
+            os.remove(Path(f"{BASEDIR}/_notes/{file}"))
             return True
     return False
 
 
 def get_image(image):
+    image = os.path.basename(image)
     for sub, dirs, files in os.walk(vault):
         for file in files:
             filepath = sub + os.sep + file
@@ -121,16 +113,13 @@ def get_image(image):
 
 def move_img(line):
     token, table, table_start, token_start = get_tab_token(line)
-<<<<<<< HEAD
-    img_flags = re.search("\|(.*)(]{2}|\))", line)
-=======
     img_flags = re.search("[\|\+\-](.*)[]{1,2})]", line)
->>>>>>> b23b3d9... 🎨 (Improve coding and structure): Improving code and structure
     if img_flags:
         img_flags = img_flags.group(0)
         img_flags = img_flags.replace("|", "")
         img_flags = img_flags.replace("]", "")
         img_flags = img_flags.replace(")", "")
+        img_flags.replace("(", "")
     else:
         img_flags = ""
     final_text = re.search("(\[{2}|\().*\.(png|jpg|jpeg|gif)", line)
@@ -139,16 +128,11 @@ def move_img(line):
     final_text = final_text.replace("%20", " ")
     final_text = final_text.replace("[", "")
     final_text = final_text.replace("]", "")
-<<<<<<< HEAD
-    image_path = get_image(final_text)
-    final_text = os.path.basename(final_text)
-=======
     final_text = final_text.replace(")", "")
     image_path = get_image(final_text)
     final_text = os.path.basename(final_text)
     img_flags = img_flags.replace(final_text, "")
     img_flags = img_flags.replace("(", "")
->>>>>>> b23b3d9... 🎨 (Improve coding and structure): Improving code and structure
     if image_path:
         shutil.copyfile(image_path, f"{img}/{final_text}")
         final_text = f"../assets/img/{final_text}"
@@ -193,13 +177,10 @@ def convert_internal(line):
     line_final = ""
     if file:
         if file.endswith(f"{ft}.md"):
-            file = os.path.basename(file)
             check = check_file(file)
-            share = check_share(file)
-            if share:
-                if check != "EXIST":
-                    file_convert(file)
-            line_final = f"[[{destination}\|{ft}]]"
+            if check != "EXIST":
+                file_convert(file)
+        line_final = f"[[{destination}\|{ft}]]"
     return line_final
 
 
@@ -230,51 +211,56 @@ def frontmatter_check(filename):
     final = open(Path(f"{BASEDIR}/_notes/{filename}"), "w", encoding="utf-8")
     if not "date" in meta.keys():
         now = datetime.now().strftime("%d-%m-%Y")
-        meta['date'] = now
+        meta["date"] = now
         update = frontmatter.dumps(meta)
         meta = frontmatter.loads(update)
     if not "title" in meta.keys():
-        meta['title'] = filename.replace('.md', '')
+        meta["title"] = filename.replace(".md", "")
         update = frontmatter.dumps(meta)
     final.write(update)
     return
 
+
 def clipboard(filepath):
-    filename=os.path.basename(filepath)
-    filename=filename.replace('.md', '')
-    if sys.platform == 'ios' or sys.platform == 'darwin':
+    filename = os.path.basename(filepath)
+    filename = filename.replace(".md", "")
+    if sys.platform == "ios":
         try:
-            # Trying to use pasteboard packages
-            import pasteboard
-            pasteboard.set_url(f'{blog}notes/{filename}')
+            import pasteboard  # work with pyto
+
+            pasteboard.set_url(f"{blog}{filename}")
         except ImportError:
-            print('Please, report issue with your OS and configuration to check if it possible to use another clipboard manager')
-    elif sys.platform == 'win32':
+            try:
+                import clipboard  # work with pytonista
+
+                clipboard.set(f"{blog}{filename}")
+            except ImportError:
+                print(
+                    "Please, report issue with your OS and configuration to check if it possible to use another clipboard manager"
+                )
+    else:
         try:
-            #trying to use Pyperclip on windows
+            # trying to use Pyperclip
             import pyperclip
-            pyperclip.copy(f'{blog}notes/{filename}')
+
+            pyperclip.copy(f"{blog}{filename}")
         except ImportError:
             print(
-                'Please, report issue with your OS and configuration to check if it possible to use another clipboard manager')
-    else:
-        print(
-            'Please, report issue with your OS and configuration to check if it '
-            'possible to use another clipboard manager')
-        
+                "Please, report issue with your OS and configuration to check if it possible to use another clipboard manager"
+            )
+
 
 def file_convert(file):
     file_name = os.path.basename(file)
-    print(file)
     if not "_notes" in file:
         if not os.path.exists(Path(f"{BASEDIR}/_notes/{file_name}")):
             data = open(file, "r", encoding="utf-8")
-            meta = frontmatter.load(data)
+            meta = frontmatter.load(file)
             final = open(Path(f"{BASEDIR}/_notes/{file_name}"), "w", encoding="utf-8")
             lines = data.readlines()
-            if meta["share"] is False:
-                return
             data.close()
+            if not meta["share"] or meta["share"] is False:
+                return
             for ln in lines:
                 final_text = ln.replace("\n", "  \n")
                 final_text = transluction_note(final_text)
@@ -292,7 +278,7 @@ def file_convert(file):
                 elif (
                     "\\" in final_text.strip()
                 ):  # New line when using "\n" in obsidian file
-                    final_text = "  "
+                    final_text = "  \n"
                 elif re.search("(\[{2}|\[).*", final_text):
                     # Escape pipe for link name
                     final_text = final_text.replace("|", "\|") + "  \n"
@@ -301,32 +287,35 @@ def file_convert(file):
             frontmatter_check(file_name)
             return True
         else:
+            meta = frontmatter.load(file)
+            if not meta["share"] or meta["share"] == False:
+                delete_file(file)
             return False
     else:
         return False
 
 
 def search_share(option=0):
-<<<<<<< HEAD
-    index = []
-=======
     filespush = []
->>>>>>> b23b3d9... 🎨 (Improve coding and structure): Improving code and structure
     for sub, dirs, files in os.walk(vault):
         for file in files:
             filepath = sub + os.sep + file
-            if filepath.endswith(".md"):
-                yaml = frontmatter.load(filepath)
-                if yaml["share"] is True:
-                    if option == 1:
-                        if diff_file(filepath):
+            if filepath.endswith(".md") and "excalidraw" not in filepath:
+                try:
+                    yaml_front = frontmatter.load(filepath)
+                    if "share" in yaml_front and yaml_front["share"] is True:
+                        if option == 1:
+                            if diff_file(filepath):
+                                delete_file(filepath)
+                        if option == 2:
                             delete_file(filepath)
-                    if option == 2:
-                        delete_file(filepath)
-                    check = file_convert(filepath)
-                    destination = dest(filepath)
-                    if check:
-                        filespush.append(destination)
+                        check = file_convert(filepath)
+                        destination = dest(filepath)
+                        if check:
+                            filespush.append(destination)
+                except yaml.scanner.ScannerError:
+                    pass
+
     return filespush
 
 
@@ -342,13 +331,13 @@ def convert_to_github():
             - --f : Force update (delete all file and reform)
             - help : print help message
             - filepath: convert just one file
-            - --ng : no commit and no push to github.
+            - --G : no commit and no push to github.
     """
     if len(sys.argv) >= 2:
         if sys.argv[1] == "help":
             print(help(convert_to_github))
         else:
-            print("Starting convert")
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] Starting convert")
             ori = sys.argv[1]
             delopt = ""
             ng = ""
@@ -374,6 +363,7 @@ def convert_to_github():
                         f"[{datetime.now().strftime('%H:%M:%S')}] Add {ori} to github"
                     )
                     COMMIT = f"{ori} to blog"
+                    clipboard(ori)
                     try:
                         import git
 
@@ -398,7 +388,6 @@ def convert_to_github():
                     )
 
             else:
-
                 if delopt == "--F":
                     print(
                         f"[{datetime.now().strftime('%H:%M:%S')}] Convert without update"
@@ -416,13 +405,16 @@ def convert_to_github():
                     new_files = search_share(1)
                 commit = "Add to blog:\n"
                 if len(new_files) > 0:
+                    for md in new_files:
+                        commit = commit + "\n — " + md
                     if ng != "--G":
+                        if len(new_files) == 1:
+                            md = "".join(new_files)
+                            clipboard(md)
                         try:
                             import git
 
                             repo = git.Repo(Path(f"{BASEDIR}/.git"))
-                            for md in new_files:
-                                commit = commit + "\n — " + md
                             repo.git.add(".")
                             repo.git.commit("-m", f"git commit {commit}")
                             origin = repo.remote(name="origin")
@@ -436,7 +428,8 @@ def convert_to_github():
                             )
                     else:
                         print(
-                            f"[{datetime.now().strftime('%H:%M:%S')}] 🎉 Converted {commit}"
+                            f"[{datetime.now().strftime('%H:%M:%S')}] 🎉 Converted "
+                            f"{commit.replace('Add to blog', '')}"
                         )
                 else:
                     print(
@@ -450,12 +443,18 @@ def convert_to_github():
         new_files = search_share(1)
         commit = "Add to blog :\n"
         if len(new_files) > 0:
+            if len(new_files) == 1:
+                md = "".join(new_files)
+                clipboard(md)
             try:
                 import git
 
                 repo = git.Repo(Path(f"{BASEDIR}/.git"))
                 for md in new_files:
                     commit = commit + "\n — " + md
+                if len(new_files) == 1:
+                    md = "".join(new_files)
+                    clipboard(md)
                 repo.git.add(A=True)
                 repo.git.commit(m=commit)
                 origin = repo.remote("origin")
