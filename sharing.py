@@ -62,6 +62,57 @@ def diff_file(file):
             return True
 
 
+def admonition_trad_title(line, content_type):
+    #Admonition title always are : 'title:(.*)' so...
+    ad_title= re.search('title:(.*)', line)
+    title = line
+    if ad_title:
+        # get content title
+        title_group=ad_title.group(1)
+        title_md = '> **'+title_group.strip()+'**{: .ad-title-' + content_type + '}'
+        title = re.sub('title:(.*)', title_md, line)
+    else:
+        if 'collapse:' in line :
+            title = ""
+        elif 'icon:' in line:
+            title = ""
+        elif 'color:' in line:
+            title = ""
+        elif len(line) == 1:
+            title = ""
+        else:
+            title = "> " + line #admonition inline
+    return title
+
+def admonition_trad(file_data):
+    code_index = 0
+    code_dict={}
+    start = 0
+    end = 0
+    start_list = []
+    end_list = []
+    for i in range (0, len(file_data)):
+        if re.search('```ad-(.*)', file_data[i]):
+            start = i
+            start_list.append(start)
+        elif re.match('```', file_data[i]) :
+            end = i
+            end_list.append(end)
+    for i,j in zip(start_list, end_list):
+        code = {code_index:(i, j)}
+        code_index = code_index+1
+        code_dict.update(code)
+    for ad, ln in code_dict.items():
+        ad_start = ln[0]
+        ad_end = ln[1]
+        file_data[ad_start], ad_type=admonition_trad_type(file_data[ad_start])
+        ad_type=ad_type
+        code_block = [x for x in range(ad_start+1, ad_end)]
+        for fl in code_block:
+            file_data[fl] = admonition_trad_title(file_data[fl], ad_type)
+        file_data[ad_end] = ''
+    return file_data
+
 def delete_file(filepath):
     for file in os.listdir(post):
         filepath = os.path.basename(filepath)
