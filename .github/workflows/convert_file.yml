@@ -10,6 +10,10 @@
           with:
             ssh-key: ${{ secrets.SUBMODULE_OBSIDIAN }}
             submodules: 'recursive'
+        - name: SSH private
+          uses: webfactory/ssh-agent@v0.5.3
+          with:
+            ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
         - name: setup python
           uses: actions/setup-python@v2
           with:
