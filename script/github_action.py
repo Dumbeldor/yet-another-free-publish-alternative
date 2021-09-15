@@ -10,9 +10,10 @@ import frontmatter
 import yaml
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
+BASESCRIPT = os.path.abspath(os.path.dirname(__file__))
 if "script" in BASEDIR:
     BASEDIR = PurePath(BASEDIR).parents[0]
-env = dotenv_values(Path(f"{BASEDIR}/.env"))
+env = dotenv_values(Path(f"{BASESCRIPT}/.env"))
 post = Path(f"{BASEDIR}/_notes")
 img = Path(f"{BASEDIR}/assets/img/")
 try:
