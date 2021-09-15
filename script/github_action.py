@@ -13,18 +13,16 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 if "script" in BASEDIR:
     BASEDIR = PurePath(BASEDIR).parents[0]
 env = dotenv_values(Path(f"{BASEDIR}/.env"))
-path = Path(f"{BASEDIR}/.git")  # GIT SHARED
 post = Path(f"{BASEDIR}/_notes")
 img = Path(f"{BASEDIR}/assets/img/")
+vault = Path(env['vault'])
+blog = env["blog"]
 
-# Seems to have problem with dotenv with pyto on IOS 15
-try:
-    vault = Path(env["vault"])
-    blog = env["blog"]
-except KeyError:
-    with open(Path(f"{BASEDIR}/.env")) as f:
-        vault = Path("".join(f.readlines(1)).replace("vault=", ""))
-        blog = "".join(f.readlines(2)).replace("blog=", "")
+def check_file(filepath):
+    for file in os.listdir(post):
+        if filepath == file:
+            return "EXIST"
+    return "NE"
 
 
 def retro(filepath):
@@ -41,12 +39,10 @@ def retro(filepath):
     notes = [i for i in notes if "%%" not in i]
     return notes
 
-
 def remove_date_title(meta):
     meta.metadata.pop("date", None)
     meta.metadata.pop("title", None)
     return meta.metadata
-
 
 def diff_file(file):
     file_name = os.path.basename(file)
@@ -66,7 +62,6 @@ def diff_file(file):
             return False #Not different
         else:
             return True
-
 
 def admonition_trad_type(line):
     # Admonition Obsidian : blockquote + ad-
@@ -118,7 +113,6 @@ def admonition_trad_type(line):
             )  # if admonition "personnal" type, use note by default
     return ad_type, content_type
 
-
 def admonition_trad_title(line, content_type):
     # Admonition title always are : 'title:(.*)' so...
     ad_title = re.search("title:(.*)", line)
@@ -147,7 +141,6 @@ def admonition_trad_title(line, content_type):
         else:
             title = "> " + line  # admonition inline
     return title
-
 
 def admonition_trad(file_data):
     code_index = 0
@@ -197,7 +190,6 @@ def admonition_trad(file_data):
         file_data[ad_end] = ""
     return file_data
 
-
 def delete_file(filepath):
     for file in os.listdir(post):
         filepath = os.path.basename(filepath)
@@ -207,7 +199,6 @@ def delete_file(filepath):
             return True
     return False
 
-
 def get_image(image):
     image = os.path.basename(image)
     for sub, dirs, files in os.walk(vault):
@@ -215,7 +206,6 @@ def get_image(image):
             filepath = sub + os.sep + file
             if image in file:
                 return filepath
-
 
 def move_img(line):
     img_flags = re.search("[\|\+\-](.*)[]{1,2})]", line)
@@ -249,7 +239,6 @@ def move_img(line):
         final_text = line
     return final_text
 
-
 def relative_path(data):
     data = data.rstrip() + ".md"
     data = os.path.basename(data)
@@ -259,19 +248,10 @@ def relative_path(data):
             if data == file:
                 return filepath
 
-
-def check_file(filepath):
-    for file in os.listdir(post):
-        if filepath == file:
-            return "EXIST"
-    return "NE"
-
-
 def dest(filepath):
     file_name = os.path.basename(filepath)
     dest = Path(f"{BASEDIR}/_notes/{file_name}")
     return str(dest)
-
 
 def convert_no_embed(line):
     final_text = line
@@ -279,7 +259,6 @@ def convert_no_embed(line):
         final_text = line.replace("!", "")  # remove "!"
         final_text = re.sub("#\^(.*)", "]]", final_text)  # Link to block doesn't work
     return final_text
-
 
 def convert_to_wikilink(line):
     final_text = line
@@ -298,7 +277,6 @@ def convert_to_wikilink(line):
 
     return final_text
 
-
 def transluction_note(line):
     # If file (not image) start with "![[" : transluction with rmn-transclude (exclude
     # image from that)
@@ -311,7 +289,6 @@ def transluction_note(line):
         final_text = re.sub("]]", "::rmn-transclude]]", final_text)
         # Add transluction_note
     return final_text
-
 
 def frontmatter_check(filename):
     metadata = open(Path(f"{BASEDIR}/_notes/{filename}"), "r", encoding="utf-8")
@@ -330,38 +307,6 @@ def frontmatter_check(filename):
     final.write(update)
     final.close()
     return
-
-
-def clipboard(filepath):
-    filename = os.path.basename(filepath)
-    filename = filename.replace(".md", "")
-    filename = filename.replace(" ", "-")
-    clip = f"{blog}{filename}"
-    if sys.platform == "ios":
-        try:
-            import pasteboard  # work with pyto
-
-            pasteboard.set_string(clip)
-        except ImportError:
-            try:
-                import clipboard  # work with pytonista
-
-                clipboard.set(clip)
-            except ImportError:
-                print(
-                    "Please, report issue with your OS and configuration to check if it possible to use another clipboard manager"
-                )
-    else:
-        try:
-            # trying to use Pyperclip
-            import pyperclip
-
-            pyperclip.copy(clip)
-        except ImportError:
-            print(
-                "Please, report issue with your OS and configuration to check if it possible to use another clipboard manager"
-            )
-
 
 def file_convert(file):
     file_name = os.path.basename(file)
@@ -415,8 +360,7 @@ def file_convert(file):
     else:
         return False
 
-
-def search_share(option=0):
+def search_share():
     filespush = []
     for sub, dirs, files in os.walk(vault):
         for file in files:
@@ -425,10 +369,7 @@ def search_share(option=0):
                 try:
                     yaml_front = frontmatter.load(filepath)
                     if "share" in yaml_front and yaml_front["share"] is True:
-                        if option == 1:
-                            if diff_file(filepath):
-                                delete_file(filepath)
-                        if option == 2:
+                        if diff_file(filepath):
                             delete_file(filepath)
                         check = file_convert(filepath)
                         destination = dest(filepath)
@@ -441,156 +382,14 @@ def search_share(option=0):
                     pass
     return filespush
 
-
-def convert_to_github():
-    """
-    Create file in _notes, move image in assets, convert to relative path, add share support, and push to git
-    ----
-    Usage
-    -----
-        python3 sharing (filepath) (options)
-        Optional option:
-            - --F : Don't delete file if already exist (prevent update)
-            - --f : Force update (delete all file and reform)
-            - help : print help message
-            - filepath: convert just one file
-            - --G : no commit and no push to github.
-    """
-    if len(sys.argv) >= 2:
-        if sys.argv[1] == "help":
-            print(help(convert_to_github))
-        else:
-            print(f"[{datetime.now().strftime('%H:%M:%S')}] Starting convert")
-            ori = sys.argv[1]
-            delopt = ""
-            ng = ""
-            if "--F" in sys.argv:
-                delopt = "--F"
-            elif "--f" in sys.argv:
-                delopt = "--f"
-            if "--G" in sys.argv:
-                ng = "--G"
-            if os.path.exists(ori):
-                if delopt != "--F":
-                    print(
-                        f"[{datetime.now().strftime('%H:%M:%S')}] Convert {ori} with update"
-                    )
-                    delete_file(ori)
-                else:
-                    print(
-                        f"[{datetime.now().strftime('%H:%M:%S')}] Convert {ori} (without update)"
-                    )
-                check = file_convert(ori)
-                if check and ng != "--G":
-                    print(
-                        f"[{datetime.now().strftime('%H:%M:%S')}] Add {ori} to github"
-                    )
-                    COMMIT = f"{ori} to blog"
-                    clipboard(ori)
-                    try:
-                        import git
-
-                        repo = git.Repo(Path(f"{BASEDIR}/.git"))
-                        repo.git.add(".")
-                        repo.git.commit("-m", f"{COMMIT}")
-                        repo.git.push("origin", "HEAD:refs/for/master")
-                        print(
-                            f"[{datetime.now().strftime('%H:%M:%S')}] {ori} pushed successfully 🎉"
-                        )
-                    except ImportError:
-                        print(
-                            "[{datetime.now().strftime('%H:%M:%S')}] Please, use another way to push your change"
-                        )
-                elif check and ng == "--G":
-                    print(
-                        f"[{datetime.now().strftime('%H:%M:%S')}] 🎉 Successfully converted {ori}"
-                    )
-                else:
-                    print(
-                        f"[{datetime.now().strftime('%H:%M:%S')}] Ori already converted"
-                    )
-
-            else:
-                if delopt == "--F":
-                    print(
-                        f"[{datetime.now().strftime('%H:%M:%S')}] Convert without update"
-                    )
-                    new_files = search_share()
-                elif delopt == "--f":
-                    print(
-                        f"[{datetime.now().strftime('%H:%M:%S')}] Convert with force update"
-                    )
-                    new_files = search_share(2)
-                else:
-                    print(
-                        f"[{datetime.now().strftime('%H:%M:%S')}] Convert with update"
-                    )
-                    new_files = search_share(1)
-                commit = "Add to blog:\n"
-                if len(new_files) > 0:
-                    for md in new_files:
-                        commit = commit + "\n — " + md
-                    if ng != "--G":
-                        if len(new_files) == 1:
-                            md = "".join(new_files)
-                            clipboard(md)
-                        try:
-                            import git
-
-                            repo = git.Repo(Path(f"{BASEDIR}/.git"))
-                            repo.git.add(".")
-                            repo.git.commit("-m", f"git commit {commit}")
-                            origin = repo.remote(name="origin")
-                            origin.push()
-                            print(
-                                f"[{datetime.now().strftime('%H:%M:%S')} {commit}\n pushed successfully 🎉"
-                            )
-                        except ImportError:
-                            print(
-                                f"[{datetime.now().strftime('%H:%M:%S')}] Please use another way to push your project"
-                            )
-                    else:
-                        print(
-                            f"[{datetime.now().strftime('%H:%M:%S')}] 🎉 Converted "
-                            f"{commit.replace('Add to blog', '')}"
-                        )
-                else:
-                    print(
-                        f"[{datetime.now().strftime('%H:%M:%S')}] File already exists 😶"
-                    )
-
-    else:
-        print(
-            f"[{datetime.now().strftime('%H:%M:%S')}] Starting Convert with update and push "
+def github_add():
+    print(
+        f"[{datetime.now().strftime('%H:%M:%S')}] Starting Convert with update and push "
         )
-        new_files = search_share(1)
-        commit = "Add to blog :\n"
-        if len(new_files) > 0:
-            if len(new_files) == 1:
-                md = "".join(new_files)
-                clipboard(md)
-            try:
-                import git
-                repo = git.Repo(Path(f"{BASEDIR}/.git"))
-                for md in new_files:
-                    commit = commit + "\n — " + md
-                if len(new_files) == 1:
-                    md = "".join(new_files)
-                    clipboard(md)
-                repo.git.add(A=True)
-                repo.git.commit(m=commit)
-                origin = repo.remote("origin")
-                origin.push()
-                print(
-                    f"[{datetime.now().strftime('%H:%M:%S')}] {commit}\n pushed successfully 🎉"
-                )
-            except ImportError:
-                print(
-                    f"[{datetime.now().strftime('%H:%M:%S')}] Please use working copy"
-                )
-        else:
-            print(f"[{datetime.now().strftime('%H:%M:%S')}] File already exists 😶")
-
+    new_files = search_share()
+    if len(new_files) > 0:
+        md = ", ".join(new_files)
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Adding to blog {md}")
 
 if __name__ == "__main__":
-    convert_to_github()
+    github_add()
