@@ -7,6 +7,9 @@
       steps:
         - name: checkout repo content
           uses: actions/checkout@v2
+          with:
+            path: Seed
+            submodules: 'recursive'
         - name: setup python
           uses: actions/setup-python@v2
           with:
