@@ -13,6 +13,7 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 print(BASEDIR)
 if "script" in BASEDIR:
     BASEDIR = PurePath(BASEDIR).parents[0]
+print(BASEDIR)
 env = dotenv_values(Path(f"{BASEDIR}/.env"))
 print(env)
 post = Path(f"{BASEDIR}/_notes")
