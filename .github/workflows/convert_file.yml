@@ -19,14 +19,16 @@
         - name: execute convert
           run: |
             python ./script/github_action.py
+        - name: add github environ
+          run: |
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
         - name: Check for change
           run: git status
         - name: stage changed files
           run: git add .
-        - name: Commit
+        - name: Git
           run: git commit -m "Auto update blog"
-          with:
-            github_token: ${{ secrets.GITHUB_TOKEN }}
         - name: fetch from GitAction
           run: git fetch origin GitAction
         - name: push
