@@ -25,6 +25,8 @@
           run: git add .
         - name: Commit
           run: git commit -m "Auto update blog"
+          with:
+            github_token: ${{ secrets.GITHUB_TOKEN }}
         - name: fetch from GitAction
           run: git fetch origin GitAction
         - name: push
