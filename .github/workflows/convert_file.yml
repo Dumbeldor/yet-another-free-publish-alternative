@@ -7,6 +7,9 @@
       steps:
         - name: checkout repo content
           uses: actions/checkout@v2
+          with:
+            ssh-key: ${{ secrets.SUBMODULE_OBSIDIAN }}
+            submodules: 'recursive'
         - name: setup python
           uses: actions/setup-python@v2
           with:
@@ -15,4 +18,4 @@
           run: pip install -r ./script/requirements.txt
         - name: execute convert
           run: |
-            python ./script/github_action.py 
+            python ./script/github_action.py
