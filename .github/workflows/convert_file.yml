@@ -19,3 +19,13 @@
         - name: execute convert
           run: |
             python ./script/github_action.py
+        - name: Check for change
+          run: git status
+        - name: stage changed files
+          run: git add .
+        - name: Commit
+          run: git commit -m "Auto update blog"
+        - name: fetch from GitAction
+          run: git fetch origin GitAction
+        - name: push
+          run: git push origin HEAD:GitAction
