@@ -5,10 +5,13 @@
       runs-on: ubuntu-latest
 
       steps:
-        - name: checkout repo content
+        - uses: webfactory/ssh-agent@v0.5.3
+          with:
+            ssh-private-key: ${{ secrets.SUBMODULE_OBSIDIAN }}
+        - name: checkout submodules
           uses: actions/checkout@v2
           with:
-            submodules: 'recursive'
+            run: git submodule update --init --recursive
         - name: setup python
           uses: actions/setup-python@v2
           with:
