@@ -1,2 +1,3 @@
 [submodule "Seed"]
+	path = "Seed"
 	url = git@github.com:Mara-Li/Obsidian-Seed.git
