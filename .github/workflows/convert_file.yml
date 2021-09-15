@@ -30,6 +30,6 @@
         - name: Git
           run: git commit -m "Auto update blog"
         - name: fetch from GitAction
-          run: git fetch origin GitAction
+          run: git fetch origin GitActions
         - name: push
-          run: git push origin HEAD:GitAction
+          run: git push origin HEAD:GitActions
