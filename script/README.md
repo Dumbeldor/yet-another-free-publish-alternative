@@ -178,7 +178,7 @@ jump <vault>
 python3 <vault-path>/script/sharing.py <file>
 ```
 
-You could also create an alias for sharing using `~/.profile`: 
+You could also create an alias for sharing using `~/Documents/.profile`: 
 `alias share='python3 <git-folder>/script/sharing.py'`
 
 ### Obsidian 
