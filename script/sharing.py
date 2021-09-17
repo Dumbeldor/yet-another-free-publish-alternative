@@ -403,7 +403,7 @@ def file_convert(file):
                 ):  # CONVERT IMAGE
                     final_text = move_img(final_text)
                 elif (
-                    "\\" in final_text.strip()
+                    re.fullmatch('\\\\', final_text.strip())
                 ):  # New line when using "\" in obsidian file
                     final_text = "  \n"
                 elif re.search("(\[{2}|\[).*", final_text):
@@ -559,17 +559,14 @@ def convert_to_github():
         "--Github", "--G", help="No commit and no push to github", action="store_true"
     )
     args = parser.parse_args()
-    if args:  # arguments
-        ori = args.filepath
-        delopt = False
-        if args.Preserve:
-            delopt = True
-        force = args.update
-        ng = args.Github
-        if ori and os.path.exists(ori):  # Share ONE
-            convert_one(ori, delopt, ng)
-        else:
-            convert_all(delopt, ng, force)
+    ori = args.filepath
+    delopt = False
+    if args.Preserve:
+        delopt = True
+    force = args.update
+    ng = args.Github
+    if ori and os.path.exists(ori):  # Share ONE
+        convert_one(ori, delopt, ng)
     else:
         convert_all()
 
