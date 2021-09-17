@@ -120,7 +120,31 @@ Note : For the custom type, the type become the title of the note, so you don't 
 
 ### IOS Shortcuts
 
-### IOS
+For all shortcuts, you need to use [Working Copy](https://workingcopyapp.com/).
+
+You need to create your `.env` file ; To do that, I suggest you to use [Textastic](https://www.textasticapp.com/) (not free) or [a-shell](https://holzschu.github.io/a-Shell_iOS/) (free).
+
+#### Configuration
+
+The best and simpler way to get the path of your vault is to use [a-shell](https://holzschu.github.io/a-Shell_iOS/).
+
+1. `pickFolfer` and choose the `vault` folder in your IOS
+2. `showmarks` and select the path of your vault 
+
+Create the `.env` with a-shell : 
+1. `pickFolder` and choose the git blog folder 
+2. `showmarks` to get the name of the shortcuts
+3. `jump <name>`
+4. `vim .env`
+5. press i and write :
+  ```
+  vault='vault-path'
+  blog='blog path'
+  ```
+6. Press the `round arrow` key and : `shift + ZZ` to write
+
+
+#### Pyto
 To use the shortcuts, you need : 
 - [Pyto](https://apps.apple.com/fr/app/pyto-python-3/id1436650069)
 - [Toolbox Pro](https://apps.apple.com/fr/app/toolbox-pro-for-shortcuts/id1476205977)
@@ -134,6 +158,20 @@ There is another shortcuts to "share all" files : [Share true file in vault](htt
 
 Note : You first need to clone the repo with Working Copy
 
+#### A-Shell
+
+To use the [shortcuts](https://routinehub.co/shortcut/10151/), you need :
+- [a-shell](https://holzschu.github.io/a-Shell_iOS/) (Free)
+- [Working Copy](https://workingcopyapp.com/)
+
+For the moment I can't create a shortcuts to share only one file BUT ! You can using `a-shell` as you do in a normal terminal, aka : 
+```
+jump <vault>
+python3 <vault-path>/script/sharing.py <file>
+```
+
+You could also create an alias for sharing using `~/.profile`: 
+`alias share='python3 <git-folder>/script/sharing.py'`
 
 ### Obsidian 
 → Please use Wikilinks with "short links" (I BEG YOU)
