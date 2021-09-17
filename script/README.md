@@ -153,16 +153,24 @@ To use the shortcuts, you need :
 The main shortcut is on RoutineHub (more pratical for version update) : [share one file](https://routinehub.co/shortcut/10044/)
 (it's equivalent to `share <filepath>`)
 
-There is another shortcuts to "share all" files : [Share true file in vault](https://routinehub.co/shortcut/10045/)
+There is another shortcuts to "share all" files : [Share all true file in vault](https://routinehub.co/shortcut/10045/)
 (it's equivalent to `share` without arguments)
 
-Note : You first need to clone the repo with Working Copy
+Note : You first need to clone the repo with Working Copy and install all requirements. 
 
 #### A-Shell
 
 To use the [shortcuts](https://routinehub.co/shortcut/10151/), you need :
 - [a-shell](https://holzschu.github.io/a-Shell_iOS/) (Free)
 - [Working Copy](https://workingcopyapp.com/)
+
+Before running the shortcuts, you need to install all requirements, aka :
+```
+jump <vault>
+cd script
+pip install -r requirements.txt
+```
+
 
 For the moment I can't create a shortcuts to share only one file BUT ! You can using `a-shell` as you do in a normal terminal, aka : 
 ```
