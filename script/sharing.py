@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import re
 import sys
 import os
@@ -372,7 +374,7 @@ def clipboard(filepath):
             )
 
 
-def file_convert(file):
+def file_convert(file, option=0):
     file_name = os.path.basename(file)
     if not "_notes" in file:
         if not os.path.exists(Path(f"{BASEDIR}/_notes/{file_name}")):
@@ -381,8 +383,14 @@ def file_convert(file):
             final = open(Path(f"{BASEDIR}/_notes/{file_name}"), "w", encoding="utf-8")
             lines = data.readlines()
             data.close()
-            if "share" not in meta.keys() or meta["share"] is False:
-                return
+            if option ==1:
+                if "share" not in meta.keys() or meta["share"] is False:
+                    meta["share"] = True
+                    update = frontmatter.dumps(meta)
+                    meta = frontmatter.loads(update)
+            else:
+                if "share" not in meta.keys() or meta["share"] is False:
+                    return
             lines = admonition_trad(lines)
             for ln in lines:
                 final_text = ln.replace("\n", "  \n")
@@ -459,7 +467,8 @@ def git_push(COMMIT):
         repo = git.Repo(Path(f"{BASEDIR}/.git"))
         repo.git.add(".")
         repo.git.commit("-m", f"{COMMIT}")
-        repo.git.push("origin", "HEAD:refs/for/master")
+        origin = repo.remote('origin')
+        origin.push()
         print(f"[{datetime.now().strftime('%H:%M:%S')}] {COMMIT} successfully 🎉")
     except ImportError:
         print(
@@ -478,7 +487,7 @@ def convert_one(ori, delopt, git):
         print(
             f"[{datetime.now().strftime('%H:%M:%S')}] STARTING CONVERT [{file_name}] OPTIONS :\n- PRESERVE"
         )
-    check = file_convert(ori)
+    check = file_convert(ori, 1)
     if check and not git:
         COMMIT = f"Pushed {file_name.lower()} to blog"
         git_push(COMMIT)
@@ -495,9 +504,9 @@ def convert_one(ori, delopt, git):
 
 def convert_all(delopt=False, git=False, force=False):
     if git:
-        git_info = "PUSH"
-    else:
         git_info = "NO PUSH"
+    else:
+        git_info = "PUSH"
 
     if delopt:  # preserve
         print(
@@ -518,7 +527,7 @@ def convert_all(delopt=False, git=False, force=False):
     if len(new_files) > 0:
         for md in new_files:
             commit = commit + "\n - " + md
-        if not git:
+        if git is False:
             if len(new_files) == 1:
                 md = "".join(new_files)
                 commit = md
@@ -531,45 +540,48 @@ def convert_all(delopt=False, git=False, force=False):
         print(f"[{datetime.now().strftime('%H:%M:%S')}] File already exists 😶")
 
 
-def convert_to_github():
+def blog():
     parser = argparse.ArgumentParser(
         description="Create file in _notes, move image in assets, convert to relative path, add share support, and push to git"
     )
     group_f = parser.add_mutually_exclusive_group()
     group_f.add_argument(
-        "--Preserve",
+        "--preserve",
         "--P",
         help="Don't delete file if already exist",
         action="store_true",
     )
     group_f.add_argument(
         "--update",
-        "--u",
+        "--U",
         help="force update : delete all file and reform.",
-        action="store_true",
-    )
+        action="store_true")
     parser.add_argument(
         "--filepath",
-        "--f",
+        "--F",
         help="Filepath of the file you want to convert",
         action="store",
         required=False,
     )
     parser.add_argument(
-        "--Github", "--G", help="No commit and no push to github", action="store_true"
+        "--Git", "--G", help="No commit and no push to git", action="store_true"
     )
     args = parser.parse_args()
     ori = args.filepath
     delopt = False
-    if args.Preserve:
+    if args.preserve:
         delopt = True
     force = args.update
-    ng = args.Github
-    if ori and os.path.exists(ori):  # Share ONE
-        convert_one(ori, delopt, ng)
+    ng = args.Git
+    if ori :
+        if os.path.exists(ori): #Share ONE
+            convert_one(ori, delopt, ng)
+        else:
+            print(f"Error : {ori} doesn't exist.")
+            return
     else:
-        convert_all()
+        convert_all(delopt, ng, force)
 
 
 if __name__ == "__main__":
-    convert_to_github()
+    blog()

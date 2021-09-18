@@ -28,16 +28,17 @@ blog="https://your-website.netlify.app/notes/"
 ```
 
 # Script
-Usage: `sharing.py  [-h] [--Preserve | --update] [--filepath FILEPATH] [--Github]`
+Usage: `sharing.py  [-h] [--Preserve | --update] [--filepath FILEPATH] [--Git]`
 
 Create file in `_notes`, move image in assets, convert to relative path, add share support, and push to git
 
 Optional arguments:
 -  `-h`, `--help` : Show this help message and exit  
 - `--Preserve`, `--P` : Don't delete file if already exist  
-- `--update`, `--u` : Force update : delete all file and reform.  
-- `--filepath FILEPATH`, `--f FILEPATH` : Filepath of the file you want to convert  
-- `--Github`, `--G` : No commit and no push to github  
+- `--update`, `--U` : Force update : delete all file and reform.  
+- `--filepath FILEPATH`, `--F FILEPATH` : Filepath of the file you want to 
+  convert  
+- `--Git`, `--G` : No commit and no push to git (work for github, gitlab...) 
 
 ## Checking differences 
 
@@ -125,31 +126,7 @@ Note : For the custom type, the type become the title of the note, so you don't 
 
 ### IOS Shortcuts
 
-For all shortcuts, you need to use [Working Copy](https://workingcopyapp.com/).
-
-You need to create your `.env` file ; To do that, I suggest you to use [Textastic](https://www.textasticapp.com/) (not free) or [a-shell](https://holzschu.github.io/a-Shell_iOS/) (free).
-
-#### Configuration
-
-The best and simpler way to get the path of your vault is to use [a-shell](https://holzschu.github.io/a-Shell_iOS/).
-
-1. `pickFolfer` and choose the `vault` folder in your IOS
-2. `showmarks` and select the path of your vault 
-
-Create the `.env` with a-shell : 
-1. `pickFolder` and choose the git blog folder 
-2. `showmarks` to get the name of the shortcuts
-3. `jump <name>`
-4. `vim .env`
-5. press i and write :
-  ```
-  vault='vault-path'
-  blog='blog path'
-  ```
-6. Press the `round arrow` key and : `shift + ZZ` to write
-
-
-#### Pyto
+### IOS
 To use the shortcuts, you need : 
 - [Pyto](https://apps.apple.com/fr/app/pyto-python-3/id1436650069)
 - [Toolbox Pro](https://apps.apple.com/fr/app/toolbox-pro-for-shortcuts/id1476205977)
@@ -163,7 +140,6 @@ There is another shortcuts to "share all" files : [Share all true file in vault]
 
 Note : You first need to clone the repo with Working Copy and install all requirements. 
 
-#### A-Shell
 
 To use the [shortcuts](https://routinehub.co/shortcut/10151/), you need :
 - [a-shell](https://holzschu.github.io/a-Shell_iOS/) (Free)
@@ -183,7 +159,7 @@ jump <vault>
 python3 <vault-path>/script/sharing.py <file>
 ```
 
-You could also create an alias for sharing using `~/Documents/.profile`: 
+You could also create an alias for sharing using `~/.profile`: 
 `alias share='python3 <git-folder>/script/sharing.py'`
 
 ### Obsidian 
