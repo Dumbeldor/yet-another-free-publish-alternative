@@ -5,7 +5,7 @@ permalink: /about/
 content-type: eg
 ---
 
-Welcome to [[notenote.link::https://github.com/Maxence-L/notenote.link]], a fork of [[Simply Jekyll::https://github.com/raghuveerdotnet/simply-jekyll]]!
+Welcome to [[mara-ly.publish::https://github.com/Mara-Li/yet-another-free-publish-alternative]], a fork of [[notenote.link::https://github.com/Maxence-L/notenote.link]]!
 
 I used Obsidian for the last 6 months, to keep track of all of the things I was learning while pivoting my career from Economics to Data Science.
 
